@@ -18,7 +18,6 @@ private:
 private:
 	double evaluate(int x, int rotation);
 	char** getNewBoard(int x, int rotation);
-	void adjust(int best[]);
 public:
 	int* select();
 public:

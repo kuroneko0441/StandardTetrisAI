@@ -215,35 +215,6 @@ char ** Board::getNewBoard(int x, int rotation) {
 	return newboard;
 }
 
-void Board::adjust(int best[]) {
-	if(
-		(curPiece == 'I' && best[1] % 4 == 1)) {
-		best[0] -= 0;
-	} else if(
-		(curPiece == 'O') ||
-		(curPiece == 'S' && best[1] % 4 == 1) ||
-		(curPiece == 'Z' && best[1] % 4 == 1) ||
-		(curPiece == 'L' && best[1] == 1) ||
-		(curPiece == 'L' && best[1] == 3) ||
-		(curPiece == 'L'&&best[1] == 4) ||
-		(curPiece == 'J' &&best[1] == 1) ||
-		(curPiece == 'J'&&best[1] == 3) ||
-		(curPiece == 'J'&&best[1] == 4) ||
-		(curPiece == 'T'&& best[1] == 1) ||
-		(curPiece == 'T'&& best[1] == 3) ||
-		(curPiece == 'T'&& best[1] == 4)) {
-		best[0] -= 1;
-	} else if(
-		(curPiece == 'I' && best[1] % 4 == 2) ||
-		(curPiece == 'S' && best[1] % 4 == 2) ||
-		(curPiece == 'Z' && best[1] % 4 == 2) ||
-		(curPiece == 'L' && best[1] == 2) ||
-		(curPiece == 'J' && best[1] == 2) ||
-		(curPiece == 'T' && best[1] == 2)) {
-		best[0] -= 2;
-	}
-}
-
 int * Board::select() {
 	int*best = new int[2];
 	best[0] = 0;
