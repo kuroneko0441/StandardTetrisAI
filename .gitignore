@@ -1,0 +1,6 @@
+/Debug
+/Release
+AI.*
+!AI.cpp
+
+dllmain.c
