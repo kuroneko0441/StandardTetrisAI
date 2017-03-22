@@ -221,22 +221,6 @@ char* WINAPI Name()
 	return gName;
 }
 
-#define BOARDW 10
-#define BOARDH 20
-
-// 각 줄의 제일 윗 좌표를 반환
-void getTop(char board[],int boardW, int boardH, int* top) {
-	for(int i = 0; i < boardH; i++) 
-		for(int j = 0; j < boardW; j++) 
-			if(board[i*boardW+j] == '1') top[j] = (i + 1);
-}
-
-void getBlank(char board[],int boardW, int boardH, int* blank) {
-	for(int i = 0; i < boardH; i++) 
-		for(int j = 0; j < boardW; j++) 
-			if(board[i*boardW + j] == '0') blank[j]++;
-}
-
 /*
  * board는 boardW*boardH의 길이의 문자열로 이루어져 있다.
  * 예를 들어, 8*3크기의 경우：
