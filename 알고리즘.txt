@@ -1,0 +1,4 @@
+블록이 들어오면
+0부터 10번째까지 위치에
+	모든 형태로 떨군 뒤 형태 계산
+		떨굴때 sum_top, hole, bumpiness, clear line 계산
