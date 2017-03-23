@@ -228,11 +228,7 @@ char ** Board::getNewBoard(int x, int rotation) throw (char**) {
 	return newBoard;
 }
 
-int * Board::select() {
-	int*best = new int[2];
-	best[0] = 0;
-	best[1] = 1;
-
+void Board::select(int*bestX, int* bestRotation) {
 	/* unusing codes -  rule based */
 	{
 		//int min = boardH;
@@ -545,12 +541,11 @@ int * Board::select() {
 			double Q = evaluate(i, j);	/* find Max Q */
 			if(Q > bestQ) {
 				bestQ = Q;
-				best[0] = i;
-				best[1] = j;
+				*bestX = i + 1;
+				*bestRotation = j;
 			}
 		}
 	}
-	return best;
 }
 
 Board::Board(const char board[], const int boardW, const int boardH, const int curPiece, const int nextPiece)

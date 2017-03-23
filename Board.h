@@ -18,7 +18,7 @@ private:
 	double evaluate(int x, int rotation);
 	char** getNewBoard(int x, int rotation);
 public:
-	int* select();
+	void select(int*bestX, int* bestRotation);
 public:
 	Board(const char board[], const int boardW, const int boardH, const int curPiece, const int nextPiece);
 	virtual ~Board();

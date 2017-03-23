@@ -253,11 +253,7 @@ int AI(int boardW, int boardH,
 	   int* bestX, int* bestRotation) {
 	Board b(board, boardW, boardH, curPiece, nextPiece);
 
-	int*best = b.select();
-	*bestX = best[0]+1;
-	*bestRotation = best[1];
-
-	SAFE_DELETE(best);;
+	b.select(bestX,bestRotation);
 
 	return 0;
 }
