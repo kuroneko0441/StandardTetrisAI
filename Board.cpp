@@ -85,10 +85,10 @@ char ** Board::getNewBoard(int x, int rotation) {
 			newboard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x + 1] = '1';
 		} else if(rotation % 2 == 0) {
 			if(top[x] + 4 > boardH - 1) { flag = false; break; }
+			newboard[top[x]][x] = '1';
 			newboard[top[x] + 1][x] = '1';
 			newboard[top[x] + 2][x] = '1';
 			newboard[top[x] + 3][x] = '1';
-			newboard[top[x] + 4][x] = '1';
 		}
 		break;
 	case 'S':
