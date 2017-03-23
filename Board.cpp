@@ -34,7 +34,7 @@ double Board::evaluate(const int x, const int rotation) {
 	/* counting complete lines */
 	for(int y = 0; y < boardH; y++) {
 		bool flag = true;	/* flag for line complete*/
-		for(int x = 0; x < boardW; x++) { 
+		for(int x = 0; x < boardW; x++) {
 			/* breaks if line is not complete */
 			if(newBoard[y][x] == '0') { flag = false; break; }
 		}
@@ -54,178 +54,178 @@ double Board::evaluate(const int x, const int rotation) {
 	return -0.510066*sum_top + 0.760666*complete + -0.35663*sum_hole + -0.184483*bumpiness;
 }
 
-char ** Board::getNewBoard(int x, int rotation) {
-	bool flag = true;	/* flag for possible X*/
-
+char ** Board::getNewBoard(int x, int rotation) throw (char**) {
 	/* new board after this piece falls */
-	char** newboard = new char*[boardH];
+	char** newBoard = new char*[boardH];
 	for(int i = 0; i < boardH; i++) {
-		newboard[i] = new char[boardW];
+		newBoard[i] = new char[boardW];
 		for(int j = 0; j < boardW; j++)
-			newboard[i][j] = board[i][j];
+			newBoard[i][j] = board[i][j];
 	}
 
-	/* set 1 at newBoard, new position */
-	switch(curPiece) {
-	case 'O':
-		if(x < 1 ||
-		   MAX2(top[x - 1], top[x]) + 1 > boardH - 1) { flag = false; break; }
-		newboard[MAX2(top[x - 1], top[x])][x - 1] = '1';
-		newboard[MAX2(top[x - 1], top[x])][x] = '1';
-		newboard[MAX2(top[x - 1], top[x]) + 1][x - 1] = '1';
-		newboard[MAX2(top[x - 1], top[x]) + 1][x] = '1';
-		break;
-	case 'I':
-		if(rotation % 2 == 1) {
-			if(x < 2 || x > boardW - 2 ||
-			   MAX4(top[x - 2], top[x - 1], top[x], top[x + 1]) > boardH - 1) { flag = false; break; }
-			newboard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x - 2] = '1';
-			newboard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-			newboard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x] = '1';
-			newboard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-		} else if(rotation % 2 == 0) {
-			if(top[x] + 4 > boardH - 1) { flag = false; break; }
-			newboard[top[x]][x] = '1';
-			newboard[top[x] + 1][x] = '1';
-			newboard[top[x] + 2][x] = '1';
-			newboard[top[x] + 3][x] = '1';
-		}
-		break;
-	case 'S':
-		if(rotation % 2 == 1) {
-			if(x < 1 || x > boardW - 2 ||
-			   MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1], top[x], top[x + 1] - 1)][x - 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1] - 1)][x] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1][x] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1][x + 1] = '1';
-		} else if(rotation % 2 == 0) {
-			if(x > boardW - 2 ||
-			   MAX2(top[x] - 1, top[x + 1]) + 2 > boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x] - 1, top[x + 1])][x + 1] = '1';
-			newboard[MAX2(top[x] - 1, top[x + 1]) + 1][x] = '1';
-			newboard[MAX2(top[x] - 1, top[x + 1]) + 1][x + 1] = '1';
-			newboard[MAX2(top[x] - 1, top[x + 1]) + 2][x] = '1';
-		}
-		break;
-	case 'Z':
-		if(rotation % 2 == 1) {
-			if(x < 1 || x > boardW - 2 ||
-			   MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1])][x] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1])][x + 1] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1][x - 1] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1][x] = '1';
-		} else if(rotation % 2 == 0) {
-			if(x > boardW - 2 ||
-			   MAX2(top[x], top[x + 1] - 1) + 2 > boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x], top[x + 1] - 1)][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 1) + 1][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 1) + 1][x + 1] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 1) + 2][x + 1] = '1';
-		}
-		break;
-	case 'L':
-		if(rotation == 1) {
-			if(x<1 || x>boardW - 2 ||
-			   MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1)][x - 1] = '1';
-			newboard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x - 1] = '1';
-			newboard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x] = '1';
-			newboard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x + 1] = '1';
-		} else if(rotation == 2) {
-			if(x > boardW - 2 ||
-			   MAX2(top[x], top[x + 1]) + 2 > boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x], top[x + 1])][x] = '1';
-			newboard[MAX2(top[x], top[x + 1])][x + 1] = '1';
-			newboard[MAX2(top[x], top[x + 1]) + 1][x] = '1';
-			newboard[MAX2(top[x], top[x + 1]) + 2][x] = '1';
-		} else if(rotation == 3) {
-			if(x < 1 || x > boardW - 2 ||
-			   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x + 1] = '1';
-		} else if(rotation == 4) {
+	try {
+		/* set 1 at newBoard, new position */
+		/* if access overflows return nullptr */
+		switch(curPiece) {
+		case 'O':
 			if(x < 1 ||
-			   MAX2(top[x - 1] - 2, top[x]) + 2>boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x - 1] - 2, top[x])][x] = '1';
-			newboard[MAX2(top[x - 1] - 2, top[x]) + 1][x] = '1';
-			newboard[MAX2(top[x - 1] - 2, top[x]) + 2][x - 1] = '1';
-			newboard[MAX2(top[x - 1] - 2, top[x]) + 2][x] = '1';
+			   MAX2(top[x - 1], top[x]) + 1 > boardH - 1) { throw true; }
+			newBoard[MAX2(top[x - 1], top[x])][x - 1] = '1';
+			newBoard[MAX2(top[x - 1], top[x])][x] = '1';
+			newBoard[MAX2(top[x - 1], top[x]) + 1][x - 1] = '1';
+			newBoard[MAX2(top[x - 1], top[x]) + 1][x] = '1';
+			break;
+		case 'I':
+			if(rotation % 2 == 1) {
+				if(x < 2 || x > boardW - 2 ||
+				   MAX4(top[x - 2], top[x - 1], top[x], top[x + 1]) > boardH - 1) { throw true; }
+				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x - 2] = '1';
+				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x - 1] = '1';
+				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x] = '1';
+				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x + 1] = '1';
+			} else if(rotation % 2 == 0) {
+				if(top[x] + 4 > boardH - 1) { throw true; }
+				newBoard[top[x]][x] = '1';
+				newBoard[top[x] + 1][x] = '1';
+				newBoard[top[x] + 2][x] = '1';
+				newBoard[top[x] + 3][x] = '1';
+			}
+			break;
+		case 'S':
+			if(rotation % 2 == 1) {
+				if(x < 1 || x > boardW - 2 ||
+				   MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1)][x - 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1)][x] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1][x + 1] = '1';
+			} else if(rotation % 2 == 0) {
+				if(x > boardW - 2 ||
+				   MAX2(top[x] - 1, top[x + 1]) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(top[x] - 1, top[x + 1])][x + 1] = '1';
+				newBoard[MAX2(top[x] - 1, top[x + 1]) + 1][x] = '1';
+				newBoard[MAX2(top[x] - 1, top[x + 1]) + 1][x + 1] = '1';
+				newBoard[MAX2(top[x] - 1, top[x + 1]) + 2][x] = '1';
+			}
+			break;
+		case 'Z':
+			if(rotation % 2 == 1) {
+				if(x < 1 || x > boardW - 2 ||
+				   MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1])][x] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1])][x + 1] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1][x - 1] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1][x] = '1';
+			} else if(rotation % 2 == 0) {
+				if(x > boardW - 2 ||
+				   MAX2(top[x], top[x + 1] - 1) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(top[x], top[x + 1] - 1)][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x + 1] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 1) + 2][x + 1] = '1';
+			}
+			break;
+		case 'L':
+			if(rotation == 1) {
+				if(x<1 || x>boardW - 2 ||
+				   MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1)][x - 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x - 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x + 1] = '1';
+			} else if(rotation == 2) {
+				if(x > boardW - 2 ||
+				   MAX2(top[x], top[x + 1]) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(top[x], top[x + 1])][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1])][x + 1] = '1';
+				newBoard[MAX2(top[x], top[x + 1]) + 1][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1]) + 2][x] = '1';
+			} else if(rotation == 3) {
+				if(x < 1 || x > boardW - 2 ||
+				   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x + 1] = '1';
+			} else if(rotation == 4) {
+				if(x < 1 ||
+				   MAX2(top[x - 1] - 2, top[x]) + 2>boardH - 1) { throw true; }
+				newBoard[MAX2(top[x - 1] - 2, top[x])][x] = '1';
+				newBoard[MAX2(top[x - 1] - 2, top[x]) + 1][x] = '1';
+				newBoard[MAX2(top[x - 1] - 2, top[x]) + 2][x - 1] = '1';
+				newBoard[MAX2(top[x - 1] - 2, top[x]) + 2][x] = '1';
+			}
+			break;
+		case 'J':
+			if(rotation == 1) {
+				if(x < 1 || x > boardW - 2 ||
+				   MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1])][x + 1] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x - 1] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x + 1] = '1';
+			} else if(rotation == 2) {
+				if(x > boardW - 2 ||
+				   MAX2(top[x], top[x + 1] - 2) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(top[x], top[x + 1] - 2)][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 2) + 1][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 2) + 2][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 2) + 2][x + 1] = '1';
+			} else if(rotation == 3) {
+				if(x<1 || x > boardW - 2 ||
+				   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x - 1] = '1';
+			} else if(rotation == 4) {
+				if(x <1 ||
+				   MAX2(top[x - 1], top[x]) + 2>boardH - 1) { throw true; }
+				newBoard[MAX2(top[x - 1], top[x])][x - 1] = '1';
+				newBoard[MAX2(top[x - 1], top[x])][x] = '1';
+				newBoard[MAX2(top[x - 1], top[x]) + 1][x] = '1';
+				newBoard[MAX2(top[x - 1], top[x]) + 2][x] = '1';
+			}
+			break;
+		case 'T':
+			if(rotation == 1) {
+				if(x<1 || x > boardW - 2 ||
+				   MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1)][x] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x - 1] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x + 1] = '1';
+			} else if(rotation == 2) {
+				if(x > boardW - 2 ||
+				   MAX2(top[x], top[x + 1] - 1) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(top[x], top[x + 1] - 1)][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x + 1] = '1';
+				newBoard[MAX2(top[x], top[x + 1] - 1) + 2][x] = '1';
+			} else if(rotation == 3) {
+				if(x<1 || x > boardW - 2 ||
+				   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
+				newBoard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x] = '1';
+			} else if(rotation == 4) {
+				if(x <1 ||
+				   MAX2(top[x - 1] - 1, top[x]) + 2>boardH - 1) { throw true; }
+				newBoard[MAX2(top[x - 1] - 1, top[x])][x] = '1';
+				newBoard[MAX2(top[x - 1] - 1, top[x]) + 1][x - 1] = '1';
+				newBoard[MAX2(top[x - 1] - 1, top[x]) + 1][x] = '1';
+				newBoard[MAX2(top[x - 1] - 1, top[x]) + 2][x] = '1';
+			}
 		}
-		break;
-	case 'J':
-		if(rotation == 1) {
-			if(x < 1 || x > boardW - 2 ||
-			   MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1])][x + 1] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x - 1] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x + 1] = '1';
-		} else if(rotation == 2) {
-			if(x > boardW - 2 ||
-			   MAX2(top[x], top[x + 1] - 2) + 2 > boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x], top[x + 1] - 2)][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 2) + 1][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 2) + 2][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 2) + 2][x + 1] = '1';
-		} else if(rotation == 3) {
-			if(x<1 || x > boardW - 2 ||
-			   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x - 1] = '1';
-		} else if(rotation == 4) {
-			if(x <1 ||
-			   MAX2(top[x - 1], top[x]) + 2>boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x - 1], top[x])][x - 1] = '1';
-			newboard[MAX2(top[x - 1], top[x])][x] = '1';
-			newboard[MAX2(top[x - 1], top[x]) + 1][x] = '1';
-			newboard[MAX2(top[x - 1], top[x]) + 2][x] = '1';
-		}
-		break;
-	case 'T':
-		if(rotation == 1) {
-			if(x<1 || x > boardW - 2 ||
-			   MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1)][x] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x - 1] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x] = '1';
-			newboard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x + 1] = '1';
-		} else if(rotation == 2) {
-			if(x > boardW - 2 ||
-			   MAX2(top[x], top[x + 1] - 1) + 2 > boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x], top[x + 1] - 1)][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 1) + 1][x] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 1) + 1][x + 1] = '1';
-			newboard[MAX2(top[x], top[x + 1] - 1) + 2][x] = '1';
-		} else if(rotation == 3) {
-			if(x<1 || x > boardW - 2 ||
-			   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { flag = false; break; }
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-			newboard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x] = '1';
-		} else if(rotation == 4) {
-			if(x <1 ||
-			   MAX2(top[x - 1] - 1, top[x]) + 2>boardH - 1) { flag = false; break; }
-			newboard[MAX2(top[x - 1] - 1, top[x])][x] = '1';
-			newboard[MAX2(top[x - 1] - 1, top[x]) + 1][x - 1] = '1';
-			newboard[MAX2(top[x - 1] - 1, top[x]) + 1][x] = '1';
-			newboard[MAX2(top[x - 1] - 1, top[x]) + 2][x] = '1';
-		}
-	}
-	if(flag == false) {
+	} catch(bool) {
 		for(int i = 0; i < boardH; i++)
-			SAFE_DELETE(newboard[i]);
-		SAFE_DELETE(newboard);
-		return nullptr;
+			SAFE_DELETE(newBoard[i]);
+		SAFE_DELETE(newBoard);
+		newBoard = nullptr;
 	}
 
-	return newboard;
+	return newBoard;
 }
 
 int * Board::select() {
