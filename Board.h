@@ -15,7 +15,9 @@ private:
 	int*top;
 	int*hole;
 private:
+	/* evaluate current status with tops, holes, completed lines, bumpiness */
 	double evaluate(int x, int rotation);
+	/* get next board status after current (piece, x, rotation) falls */
 	char** getNewBoard(int x, int rotation);
 public:
 	void select(int*bestX, int* bestRotation);
