@@ -10,8 +10,8 @@ private:
 	char**board;
 	const int boardW;
 	const int boardH;
-	const int curPiece;
-	const int nextPiece;
+	const char curPiece;
+	const char nextPiece;
 	int*top;
 	int*hole;
 private:
