@@ -251,9 +251,9 @@ int AI(int boardW, int boardH,
 	   int curR,
 	   char nextPiece,
 	   int* bestX, int* bestRotation) {
-	Board b(board, boardW, boardH, curPiece, nextPiece);
+	Board b(board, boardW, boardH);
 
-	b.select(bestX,bestRotation);
+	b.select(curPiece,bestX,bestRotation, nextPiece);
 
 	return 0;
 }

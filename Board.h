@@ -10,18 +10,15 @@ private:
 	char**board;
 	const int boardW;
 	const int boardH;
-	const char curPiece;
-	const char nextPiece;
 	int*top;
-	int*hole;
 private:
 	/* evaluate current status with tops, holes, completed lines, bumpiness */
-	double evaluate(int x, int rotation);
+	double evaluate(char** board,char piece, int x, int rotation, char nextPiece=' ');
 	/* get next board status after current (piece, x, rotation) falls */
-	char** getNewBoard(int x, int rotation);
+	char** getNewBoard(char** board,char piece, int x, int rotation);
 public:
-	void select(int*bestX, int* bestRotation);
+	void select(char curPiece, int*bestX, int* bestRotation, char nextPiece);
 public:
-	Board(const char board[], const int boardW, const int boardH, const int curPiece, const int nextPiece);
+	Board(const char board[], const int boardW, const int boardH);
 	virtual ~Board();
 };
