@@ -1,5 +1,71 @@
 #include "Board.h"
 
+int * Board::getHeight(char ** board) {
+	int* height = new int[boardW];
+	for(int x = 0; x < boardW; x++) {
+		height[x] = 0;
+		for(int y = boardH - 1; y >= 0; y--) {
+			if(board[y][x] == '1') { height[x] = (y + 1); break; }
+		}
+	}
+	return height;
+}
+int* Board::getHole(char** board,int* height) {
+	int* hole = new int[boardW];
+	for(int x = 0; x < boardW; x++) {
+		hole[x] = 0;
+		for(int y = 0; y < height[x]; y++) {
+			if(board[y][x] == '0') { hole[x]++; }
+		}
+	}
+	return hole;
+}
+
+int Board::getBlockade(char** board,int*height, int* hole) {
+	int sum=0;
+	for (int x = 0; x < boardW; x++) {
+		if (hole[x] == 0) { continue; }
+
+		for (int y = height[x] - 1, thisHole = 0; y >= 0 && thisHole < hole[x]; y--) {
+			if (board[y][x] == '1') sum++;
+			else thisHole++;
+		}
+	}
+
+	return sum;
+}
+int Board::getEdge(char** board) {
+	int sum = 0;
+	for (int y = 0; y < boardH; y++) {
+		for (int x = 0; x < boardW; x++) {
+			if (board[y][x] == '1') {
+				if (x != boardW - 1 && board[y][x + 1] == '1') { sum++; }
+				if (y != boardH - 1 && board[y + 1][x] == '1') { sum++; }
+			}
+		}
+	}
+	return sum;
+}
+
+int Board::getWall(char ** board)
+{
+	int sum = 0;
+	for (int y = 0; y < boardH; y++) {
+		if (board[y][0] == '1') { sum++; }
+		if (board[y][boardW - 1] == '1') { sum++; }
+	}
+	return sum;
+}
+
+int Board::getFloor(char ** board)
+{
+	int sum = 0;
+	for (int x = 0; x < boardW; x++) {
+		if (board[0][x] == '1') { sum++; }
+	}
+	return sum;
+}
+
 double Board::evaluate(char** board, char curPiece, int x, int rotation, char nextPiece) {
 	double thisQ = 0.0;
 	char**newBoard = getNewBoard(board, curPiece, x, rotation);
@@ -7,51 +73,42 @@ double Board::evaluate(char** board, char curPiece, int x, int rotation, char ne
 	/* position error: piece escapes board */
 	if(newBoard == nullptr) return -1000000;
 
-	int sum_top = 0;
-	int sum_hole = 0;
-	int complete = 0;	/* completed line */
-	int bumpiness = 0;	/* absolute value of height difference */
+	int* newHeight = getHeight(newBoard);
+	int* newHole = getHole(newBoard, newHeight);
 
-	/* saving new tops */
-	int* newTop = new int[boardW];
-	for(int x = 0; x < boardW; x++) {
-		newTop[x] = 0;
-		for(int y = boardH - 1; y >= 0; y--) {
-			if(newBoard[y][x] == '1') { newTop[x] = (y + 1); break; }
-		}
-	}
+	int sum_height = 0;
+	int sum_hole = 0;
+	int sum_blockade =getBlockade(newBoard,newHeight,newHole);
+	int sum_clear = 0;
+	int sum_edge = getEdge(newBoard);
+	int sum_wall = getWall(newBoard);		/* blocks touching the wall */
+	int sum_floor = getFloor(newBoard);		/* blocks touching the floor */
+
+	/* counting heights */
+	for(int i = 0; i < boardW; i++) { sum_height += newHeight[i]; }
 
 	/* counting holes */
-	for(int x = 0; x < boardW; x++) {
-		for(int y = 0; y < newTop[x]; y++) {
-			if(newBoard[y][x] == '0') { sum_hole++; }
-		}
-	}
+	for(int i = 0; i < boardW; i++) { sum_hole += newHole[i]; }
 
-	/* counting tops */
-	for(int i = 0; i < boardW; i++) { sum_top += newTop[i]; }
-
-	/* counting complete lines */
+	/* counting sum_clear lines */
 	for(int y = 0; y < boardH; y++) {
-		bool flag = true;	/* flag for line complete*/
+		bool flag = true;	/* flag for line sum_clear*/
 		for(int x = 0; x < boardW; x++) {
-			/* breaks if line is not complete */
 			if(newBoard[y][x] == '0') { flag = false; break; }
 		}
-		if(flag == true) { complete++; }
+		if(flag == true) { sum_clear++; }
 	}
 
-	/* counting bumpiness */
-	for(int i = 0; i < boardW - 1; i++) { bumpiness += ABS(newTop[i] - newTop[i + 1]); }
-
-	/* weights from <Tetris AI - The (Near) Perfect Bot> */
-	thisQ = -0.510066*sum_top + 0.760666*complete + -0.35663*sum_hole + -0.184483*bumpiness;
+	thisQ = sum_height*w_height + sum_hole*w_hole + sum_blockade*w_blockade + sum_clear*w_clear +
+		sum_edge*w_edge + sum_wall*w_wall + sum_floor*w_floor;
 
 	if(newBoard != nullptr) {
 		for(int i = 0; i < boardH; i++) { SAFE_DELETE(newBoard[i]); }
 		SAFE_DELETE(newBoard);
 	}
-	SAFE_DELETE(newTop);
+
+	SAFE_DELETE(newHeight);
+	SAFE_DELETE(newHole);
 
 	return thisQ;
 }
@@ -64,6 +121,7 @@ char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
 		for(int j = 0; j < boardW; j++)
 			newBoard[i][j] = board[i][j];
 	}
+	int*height = getHeight(newBoard);
 
 	try {
 		/* set 1 at newBoard, new position */
@@ -71,153 +129,153 @@ char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
 		switch(curPiece) {
 		case 'O':
 			if(x < 1 ||
-			   MAX2(top[x - 1], top[x]) + 1 > boardH - 1) { throw true; }
-			newBoard[MAX2(top[x - 1], top[x])][x - 1] = '1';
-			newBoard[MAX2(top[x - 1], top[x])][x] = '1';
-			newBoard[MAX2(top[x - 1], top[x]) + 1][x - 1] = '1';
-			newBoard[MAX2(top[x - 1], top[x]) + 1][x] = '1';
+			   MAX2(height[x - 1], height[x]) + 1 > boardH - 1) { throw true; }
+			newBoard[MAX2(height[x - 1], height[x])][x - 1] = '1';
+			newBoard[MAX2(height[x - 1], height[x])][x] = '1';
+			newBoard[MAX2(height[x - 1], height[x]) + 1][x - 1] = '1';
+			newBoard[MAX2(height[x - 1], height[x]) + 1][x] = '1';
 			break;
 		case 'I':
 			if(rotation % 2 == 1) {
 				if(x < 2 || x > boardW - 2 ||
-				   MAX4(top[x - 2], top[x - 1], top[x], top[x + 1]) > boardH - 1) { throw true; }
-				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x - 2] = '1';
-				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x] = '1';
-				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x + 1] = '1';
+				   MAX4(height[x - 2], height[x - 1], height[x], height[x + 1]) > boardH - 1) { throw true; }
+				newBoard[MAX4(height[x - 2], height[x - 1], height[x], height[x + 1])][x - 2] = '1';
+				newBoard[MAX4(height[x - 2], height[x - 1], height[x], height[x + 1])][x - 1] = '1';
+				newBoard[MAX4(height[x - 2], height[x - 1], height[x], height[x + 1])][x] = '1';
+				newBoard[MAX4(height[x - 2], height[x - 1], height[x], height[x + 1])][x + 1] = '1';
 			} else if(rotation % 2 == 0) {
-				if(top[x] + 3 > boardH - 1) { throw true; }
-				newBoard[top[x]][x] = '1';
-				newBoard[top[x] + 1][x] = '1';
-				newBoard[top[x] + 2][x] = '1';
-				newBoard[top[x] + 3][x] = '1';
+				if(height[x] + 3 > boardH - 1) { throw true; }
+				newBoard[height[x]][x] = '1';
+				newBoard[height[x] + 1][x] = '1';
+				newBoard[height[x] + 2][x] = '1';
+				newBoard[height[x] + 3][x] = '1';
 			}
 			break;
 		case 'S':
 			if(rotation % 2 == 1) {
 				if(x < 1 || x > boardW - 2 ||
-				   MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1)][x - 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1)][x] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1][x] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1] - 1) + 1][x + 1] = '1';
+				   MAX3(height[x - 1], height[x], height[x + 1] - 1) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1] - 1)][x - 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1] - 1)][x] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1] - 1) + 1][x + 1] = '1';
 			} else if(rotation % 2 == 0) {
 				if(x > boardW - 2 ||
-				   MAX2(top[x] - 1, top[x + 1]) + 2 > boardH - 1) { throw true; }
-				newBoard[MAX2(top[x] - 1, top[x + 1])][x + 1] = '1';
-				newBoard[MAX2(top[x] - 1, top[x + 1]) + 1][x] = '1';
-				newBoard[MAX2(top[x] - 1, top[x + 1]) + 1][x + 1] = '1';
-				newBoard[MAX2(top[x] - 1, top[x + 1]) + 2][x] = '1';
+				   MAX2(height[x] - 1, height[x + 1]) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(height[x] - 1, height[x + 1])][x + 1] = '1';
+				newBoard[MAX2(height[x] - 1, height[x + 1]) + 1][x] = '1';
+				newBoard[MAX2(height[x] - 1, height[x + 1]) + 1][x + 1] = '1';
+				newBoard[MAX2(height[x] - 1, height[x + 1]) + 2][x] = '1';
 			}
 			break;
 		case 'Z':
 			if(rotation % 2 == 1) {
 				if(x < 1 || x > boardW - 2 ||
-				   MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1])][x] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1])][x + 1] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1][x - 1] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1]) + 1][x] = '1';
+				   MAX3(height[x - 1] - 1, height[x], height[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1])][x] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1])][x + 1] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1]) + 1][x - 1] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1]) + 1][x] = '1';
 			} else if(rotation % 2 == 0) {
 				if(x > boardW - 2 ||
-				   MAX2(top[x], top[x + 1] - 1) + 2 > boardH - 1) { throw true; }
-				newBoard[MAX2(top[x], top[x + 1] - 1)][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x + 1] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 1) + 2][x + 1] = '1';
+				   MAX2(height[x], height[x + 1] - 1) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(height[x], height[x + 1] - 1)][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 1) + 1][x + 1] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 1) + 2][x + 1] = '1';
 			}
 			break;
 		case 'L':
 			if(rotation == 1) {
 				if(x<1 || x>boardW - 2 ||
-				   MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1)][x - 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x - 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x] = '1';
-				newBoard[MAX3(top[x - 1], top[x] - 1, top[x + 1] - 1) + 1][x + 1] = '1';
+				   MAX3(height[x - 1], height[x] - 1, height[x + 1] - 1) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1], height[x] - 1, height[x + 1] - 1)][x - 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x] - 1, height[x + 1] - 1) + 1][x - 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x] - 1, height[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX3(height[x - 1], height[x] - 1, height[x + 1] - 1) + 1][x + 1] = '1';
 			} else if(rotation == 2) {
 				if(x > boardW - 2 ||
-				   MAX2(top[x], top[x + 1]) + 2 > boardH - 1) { throw true; }
-				newBoard[MAX2(top[x], top[x + 1])][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1])][x + 1] = '1';
-				newBoard[MAX2(top[x], top[x + 1]) + 1][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1]) + 2][x] = '1';
+				   MAX2(height[x], height[x + 1]) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(height[x], height[x + 1])][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1])][x + 1] = '1';
+				newBoard[MAX2(height[x], height[x + 1]) + 1][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1]) + 2][x] = '1';
 			} else if(rotation == 3) {
 				if(x < 1 || x > boardW - 2 ||
-				   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x + 1] = '1';
+				   MAX3(height[x - 1], height[x], height[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x - 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x + 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1]) + 1][x + 1] = '1';
 			} else if(rotation == 4) {
 				if(x < 1 ||
-				   MAX2(top[x - 1] - 2, top[x]) + 2>boardH - 1) { throw true; }
-				newBoard[MAX2(top[x - 1] - 2, top[x])][x] = '1';
-				newBoard[MAX2(top[x - 1] - 2, top[x]) + 1][x] = '1';
-				newBoard[MAX2(top[x - 1] - 2, top[x]) + 2][x - 1] = '1';
-				newBoard[MAX2(top[x - 1] - 2, top[x]) + 2][x] = '1';
+				   MAX2(height[x - 1] - 2, height[x]) + 2>boardH - 1) { throw true; }
+				newBoard[MAX2(height[x - 1] - 2, height[x])][x] = '1';
+				newBoard[MAX2(height[x - 1] - 2, height[x]) + 1][x] = '1';
+				newBoard[MAX2(height[x - 1] - 2, height[x]) + 2][x - 1] = '1';
+				newBoard[MAX2(height[x - 1] - 2, height[x]) + 2][x] = '1';
 			}
 			break;
 		case 'J':
 			if(rotation == 1) {
 				if(x < 1 || x > boardW - 2 ||
-				   MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1])][x + 1] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x - 1] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x] - 1, top[x + 1]) + 1][x + 1] = '1';
+				   MAX3(height[x - 1] - 1, height[x] - 1, height[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1] - 1, height[x] - 1, height[x + 1])][x + 1] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x] - 1, height[x + 1]) + 1][x - 1] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x] - 1, height[x + 1]) + 1][x] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x] - 1, height[x + 1]) + 1][x + 1] = '1';
 			} else if(rotation == 2) {
 				if(x > boardW - 2 ||
-				   MAX2(top[x], top[x + 1] - 2) + 2 > boardH - 1) { throw true; }
-				newBoard[MAX2(top[x], top[x + 1] - 2)][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 2) + 1][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 2) + 2][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 2) + 2][x + 1] = '1';
+				   MAX2(height[x], height[x + 1] - 2) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(height[x], height[x + 1] - 2)][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 2) + 1][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 2) + 2][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 2) + 2][x + 1] = '1';
 			} else if(rotation == 3) {
 				if(x<1 || x > boardW - 2 ||
-				   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x - 1] = '1';
+				   MAX3(height[x - 1], height[x], height[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x - 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x + 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1]) + 1][x - 1] = '1';
 			} else if(rotation == 4) {
 				if(x <1 ||
-				   MAX2(top[x - 1], top[x]) + 2>boardH - 1) { throw true; }
-				newBoard[MAX2(top[x - 1], top[x])][x - 1] = '1';
-				newBoard[MAX2(top[x - 1], top[x])][x] = '1';
-				newBoard[MAX2(top[x - 1], top[x]) + 1][x] = '1';
-				newBoard[MAX2(top[x - 1], top[x]) + 2][x] = '1';
+				   MAX2(height[x - 1], height[x]) + 2>boardH - 1) { throw true; }
+				newBoard[MAX2(height[x - 1], height[x])][x - 1] = '1';
+				newBoard[MAX2(height[x - 1], height[x])][x] = '1';
+				newBoard[MAX2(height[x - 1], height[x]) + 1][x] = '1';
+				newBoard[MAX2(height[x - 1], height[x]) + 2][x] = '1';
 			}
 			break;
 		case 'T':
 			if(rotation == 1) {
 				if(x<1 || x > boardW - 2 ||
-				   MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1)][x] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x - 1] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x] = '1';
-				newBoard[MAX3(top[x - 1] - 1, top[x], top[x + 1] - 1) + 1][x + 1] = '1';
+				   MAX3(height[x - 1] - 1, height[x], height[x + 1] - 1) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1] - 1)][x] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1] - 1) + 1][x - 1] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX3(height[x - 1] - 1, height[x], height[x + 1] - 1) + 1][x + 1] = '1';
 			} else if(rotation == 2) {
 				if(x > boardW - 2 ||
-				   MAX2(top[x], top[x + 1] - 1) + 2 > boardH - 1) { throw true; }
-				newBoard[MAX2(top[x], top[x + 1] - 1)][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 1) + 1][x + 1] = '1';
-				newBoard[MAX2(top[x], top[x + 1] - 1) + 2][x] = '1';
+				   MAX2(height[x], height[x + 1] - 1) + 2 > boardH - 1) { throw true; }
+				newBoard[MAX2(height[x], height[x + 1] - 1)][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 1) + 1][x] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 1) + 1][x + 1] = '1';
+				newBoard[MAX2(height[x], height[x + 1] - 1) + 2][x] = '1';
 			} else if(rotation == 3) {
 				if(x<1 || x > boardW - 2 ||
-				   MAX3(top[x - 1], top[x], top[x + 1]) + 1 > boardH - 1) { throw true; }
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x - 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1])][x + 1] = '1';
-				newBoard[MAX3(top[x - 1], top[x], top[x + 1]) + 1][x] = '1';
+				   MAX3(height[x - 1], height[x], height[x + 1]) + 1 > boardH - 1) { throw true; }
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x - 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1])][x + 1] = '1';
+				newBoard[MAX3(height[x - 1], height[x], height[x + 1]) + 1][x] = '1';
 			} else if(rotation == 4) {
 				if(x <1 ||
-				   MAX2(top[x - 1] - 1, top[x]) + 2>boardH - 1) { throw true; }
-				newBoard[MAX2(top[x - 1] - 1, top[x])][x] = '1';
-				newBoard[MAX2(top[x - 1] - 1, top[x]) + 1][x - 1] = '1';
-				newBoard[MAX2(top[x - 1] - 1, top[x]) + 1][x] = '1';
-				newBoard[MAX2(top[x - 1] - 1, top[x]) + 2][x] = '1';
+				   MAX2(height[x - 1] - 1, height[x]) + 2>boardH - 1) { throw true; }
+				newBoard[MAX2(height[x - 1] - 1, height[x])][x] = '1';
+				newBoard[MAX2(height[x - 1] - 1, height[x]) + 1][x - 1] = '1';
+				newBoard[MAX2(height[x - 1] - 1, height[x]) + 1][x] = '1';
+				newBoard[MAX2(height[x - 1] - 1, height[x]) + 2][x] = '1';
 			}
 		}
 	} catch(bool) {
@@ -226,6 +284,8 @@ char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
 		SAFE_DELETE(newBoard);
 		newBoard = nullptr;
 	}
+
+	SAFE_DELETE(height);
 
 	return newBoard;
 }
@@ -559,20 +619,10 @@ Board::Board(const char board[], const int boardW, const int boardH)
 		for(int x = 0; x < boardW; x++)
 			this->board[y][x] = board[y*boardW + x];
 	}
-
-	/* saving tops */
-	this->top = new int[boardW];
-	for(int x = 0; x < boardW; x++) {
-		top[x] = 0;
-		for(int y = boardH - 1; y >= 0; y--) {
-			if(this->board[y][x] == '1') { top[x] = (y + 1); break; }
-		}
-	}
 }
 Board::~Board() {
 	for(int i = 0; i < boardW; i++)
 		SAFE_DELETE(board[i]);
 	SAFE_DELETE(board);
 
-	SAFE_DELETE(top);
 }
