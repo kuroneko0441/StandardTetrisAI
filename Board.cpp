@@ -87,7 +87,7 @@ char ** Board::getNewBoard(char** board,char curPiece, int x, int rotation) {
 				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x] = '1';
 				newBoard[MAX4(top[x - 2], top[x - 1], top[x], top[x + 1])][x + 1] = '1';
 			} else if(rotation % 2 == 0) {
-				if(top[x] + 4 > boardH - 1) { throw true; }
+				if(top[x] + 3 > boardH - 1) { throw true; }
 				newBoard[top[x]][x] = '1';
 				newBoard[top[x] + 1][x] = '1';
 				newBoard[top[x] + 2][x] = '1';
