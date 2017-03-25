@@ -1,9 +1,8 @@
-#include <iostream>
 #include "Board.h"
 
-double Board::evaluate(char** board,char curPiece, int x,int rotation, char nextPiece) {
+double Board::evaluate(char** board, char curPiece, int x, int rotation, char nextPiece) {
 	double thisQ = 0.0;
-	char**newBoard = getNewBoard(board,curPiece, x, rotation);
+	char**newBoard = getNewBoard(board, curPiece, x, rotation);
 
 	/* position error: piece escapes board */
 	if(newBoard == nullptr) return -1000000;
@@ -15,8 +14,8 @@ double Board::evaluate(char** board,char curPiece, int x,int rotation, char next
 
 	/* saving new tops */
 	int* newTop = new int[boardW];
-	memset(newTop, 0, boardW * sizeof(int));
 	for(int x = 0; x < boardW; x++) {
+		newTop[x] = 0;
 		for(int y = boardH - 1; y >= 0; y--) {
 			if(newBoard[y][x] == '1') { newTop[x] = (y + 1); break; }
 		}
@@ -43,7 +42,7 @@ double Board::evaluate(char** board,char curPiece, int x,int rotation, char next
 	}
 
 	/* counting bumpiness */
-	for(int i = 0; i < boardW - 1; i++) { bumpiness += abs(newTop[i] - newTop[i + 1]); }
+	for(int i = 0; i < boardW - 1; i++) { bumpiness += ABS(newTop[i] - newTop[i + 1]); }
 
 	/* weights from <Tetris AI - The (Near) Perfect Bot> */
 	thisQ = -0.510066*sum_top + 0.760666*complete + -0.35663*sum_hole + -0.184483*bumpiness;
@@ -57,7 +56,7 @@ double Board::evaluate(char** board,char curPiece, int x,int rotation, char next
 	return thisQ;
 }
 
-char ** Board::getNewBoard(char** board,char curPiece, int x, int rotation) {
+char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
 	/* new board after this piece falls */
 	char** newBoard = new char*[boardH];
 	for(int i = 0; i < boardH; i++) {
@@ -231,7 +230,7 @@ char ** Board::getNewBoard(char** board,char curPiece, int x, int rotation) {
 	return newBoard;
 }
 
-void Board::select(char curPiece,int*bestX, int* bestRotation, char nextPiece) {
+void Board::select(char curPiece, int*bestX, int* bestRotation, char nextPiece) {
 	/* unusing codes -  rule based */
 	{
 		//int min = boardH;
@@ -541,7 +540,7 @@ void Board::select(char curPiece,int*bestX, int* bestRotation, char nextPiece) {
 	double bestQ = -1000000.0;
 	for(int i = 0; i < boardW; i++) {	/* for every Xs */
 		for(int j = 1; j < 5; j++) {	/* for every rotations */
-			double Q = evaluate(board,curPiece, i, j,nextPiece);	/* find Max Q */
+			double Q = evaluate(board, curPiece, i, j, nextPiece);	/* find Max Q */
 			if(Q > bestQ) {
 				bestQ = Q;
 				*bestX = i + 1;
@@ -563,13 +562,13 @@ Board::Board(const char board[], const int boardW, const int boardH)
 
 	/* saving tops */
 	this->top = new int[boardW];
-	memset(top, 0, boardW * sizeof(int));
-	for(int i = 0; i < boardH; i++)
-		for(int j = 0; j < boardW; j++)
-			if(board[i*boardW + j] == '1')
-				top[j] = (i + 1);
+	for(int x = 0; x < boardW; x++) {
+		top[x] = 0;
+		for(int y = boardH - 1; y >= 0; y--) {
+			if(this->board[y][x] == '1') { top[x] = (y + 1); break; }
+		}
+	}
 }
-
 Board::~Board() {
 	for(int i = 0; i < boardW; i++)
 		SAFE_DELETE(board[i]);
