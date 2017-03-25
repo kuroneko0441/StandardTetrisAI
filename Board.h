@@ -11,12 +11,12 @@ private:
 	char**board;
 	const int boardW;
 	const int boardH;
-	int*top;
 private:
+	int* getHeight(char** board);
 	/* evaluate current status with tops, holes, completed lines, bumpiness */
-	double evaluate(char** board,char piece, int x, int rotation, char nextPiece=' ');
+	double evaluate(char** board, char piece, int x, int rotation, char nextPiece = ' ');
 	/* get next board status after current (piece, x, rotation) falls */
-	char** getNewBoard(char** board,char piece, int x, int rotation);
+	char** getNewBoard(char** board, char piece, int x, int rotation);
 public:
 	void select(char curPiece, int*bestX, int* bestRotation, char nextPiece);
 public:
