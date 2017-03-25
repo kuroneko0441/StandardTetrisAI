@@ -1,5 +1,13 @@
 #include "Board.h"
 
+double w_height;
+double w_hole;
+double w_blockade;
+double w_clear;
+double w_edge;
+double w_wall;
+double w_floor;
+
 int * Board::getHeight(char ** board) {
 	int* height = new int[boardW];
 	for(int x = 0; x < boardW; x++) {
@@ -625,4 +633,15 @@ Board::~Board() {
 		SAFE_DELETE(board[i]);
 	SAFE_DELETE(board);
 
+}
+
+void initialize(double w[])
+{
+	w_height = w[0];
+	w_hole = w[1];
+	w_blockade=w[2];
+	w_clear = w[3];
+	w_edge = w[4];
+	w_wall = w[5];
+	w_floor = w[6];
 }

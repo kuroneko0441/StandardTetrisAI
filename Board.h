@@ -5,20 +5,20 @@
 #define MAX4(w,x,y,z) MAX3(MAX2((w),(x)),(y),(z))
 #define SAFE_DELETE(ptr) if((ptr)!=nullptr) delete[]ptr
 
+extern double w_height;
+extern double w_hole;
+extern double w_blockade;
+extern double w_clear;
+extern double w_edge;
+extern double w_wall;
+extern double w_floor;
+
 class Board
 {
 private:
 	char**board;
 	const int boardW;
 	const int boardH;
-	/* weights from <Coding a Tetris AI using a Genetic Algorithm> */
-	const double w_height = -3.78;
-	const double w_hole = -8.8;
-	const double w_blockade = -0.59;
-	const double w_clear = 8.2;
-	const double w_edge = 3.7;
-	const double w_wall = 2.5;
-	const double w_floor = 4.0;
 private:
 	int* getHeight(char** board);
 	/* count holes */
@@ -41,3 +41,4 @@ public:
 	Board(const char board[], const int boardW, const int boardH);
 	virtual ~Board();
 };
+void initialize(double w[]);

@@ -1,11 +1,16 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <fstream>
 #include <string.h>
 #include "Board.h"
 #define DECLSPEC_EXPORT __declspec(dllexport)
 #define WINAPI __stdcall
 
+using namespace std;
+
+double w[8][7];
+int index = 0;
 
 char gName[64];
 
@@ -281,6 +286,19 @@ int WINAPI AIPath(int boardW, int boardH,
 		char nextPiece,
 		char path[] )
 {
+	if (curPiece == ' ')
+		return 0;
+	bool newGame = true;
+	for(int i=0;i<boardW*boardH;i++)
+		if (board[i] == '1') { newGame = false; break; }
+	if (newGame == true) {
+		if (index == 8) { index = 0; }
+		ifstream inf("weights.txt", std::ios::in);
+		for (int i = 0; i < 7; i++)
+			inf >> w[index][i];
+		initialize(w[index++]);
+		newGame = false;
+	}
 	//if (0)
 	{
 		int bestX = 0;
