@@ -6,7 +6,7 @@ int* Board::getHeight(char ** board)
 	for (int x = 0; x < boardW; x++) {
 		height[x] = 0;
 		for (int y = boardH - 1; y >= 0; y--) {
-			if (this->board[y][x] == '1') { height[x] = (y + 1); break; }
+			if (board[y][x] == '1') { height[x] = (y + 1); break; }
 		}
 	}
 	return height;
