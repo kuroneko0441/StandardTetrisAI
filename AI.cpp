@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <string.h>
-#include "Board.h"
+#include "functions.h"
 #define DECLSPEC_EXPORT __declspec(dllexport)
 #define WINAPI __stdcall
 
@@ -251,9 +251,13 @@ int AI(int boardW, int boardH,
 	   int curR,
 	   char nextPiece,
 	   int* bestX, int* bestRotation) {
-	Board b(board, boardW, boardH);
+	char**board2D = convert2D(board, boardW, boardH);
 
-	b.select(curPiece,bestX,bestRotation, nextPiece);
+	select(board2D, boardW, boardH, curPiece, bestX, bestRotation, nextPiece);
+
+	for (int i = 0; i < boardH; i++)
+		delete[]board2D[i];
+	delete[]board2D;
 
 	return 0;
 }

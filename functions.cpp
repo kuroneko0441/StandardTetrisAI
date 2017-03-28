@@ -1,6 +1,17 @@
-#include "Board.h"
+#include "functions.h"
 
-int* Board::getHeight(char ** board)
+char** convert2D(char*board1D, int boardW, int boardH)
+{
+	char**board2D = new char*[boardH];
+	for (int y = 0; y < boardH; y++) {
+		board2D[y] = new char[boardW];
+		for (int x = 0; x < boardW; x++)
+			board2D[y][x] = board1D[y*boardW + x];
+	}
+	return board2D;
+}
+
+int * getHeight(char ** board, int boardW, int boardH)
 {
 	int*height = new int[boardW];
 	for (int x = 0; x < boardW; x++) {
@@ -12,9 +23,10 @@ int* Board::getHeight(char ** board)
 	return height;
 }
 
-double Board::evaluate(char** board, char curPiece, int x, int rotation, char nextPiece) {
+double evaluate(char ** board, int boardW, int boardH, char curPiece, int x, int rotation, char nextPiece)
+{
 	double thisQ = 0.0;
-	char**newBoard = getNewBoard(board, curPiece, x, rotation);
+	char**newBoard = getNewBoard(board,boardW,boardH, curPiece, x, rotation);
 
 	/* position error: piece escapes board */
 	if (newBoard == nullptr) return -1000000;
@@ -24,7 +36,7 @@ double Board::evaluate(char** board, char curPiece, int x, int rotation, char ne
 	int complete = 0;	/* completed line */
 	int bumpiness = 0;	/* absolute value of height difference */
 
-	/* saving new tops */
+						/* saving new tops */
 	int* newHeight = new int[boardW];
 	for (int x = 0; x < boardW; x++) {
 		newHeight[x] = 0;
@@ -59,16 +71,16 @@ double Board::evaluate(char** board, char curPiece, int x, int rotation, char ne
 	/* weights from <Tetris AI - The (Near) Perfect Bot> */
 	thisQ = -0.510066*sum_top + 0.760666*complete + -0.35663*sum_hole + -0.184483*bumpiness;
 
-	if (newBoard != nullptr) {
-		for (int i = 0; i < boardH; i++) { SAFE_DELETE(newBoard[i]); }
-		SAFE_DELETE(newBoard);
-	}
-	SAFE_DELETE(newHeight);
+	for (int i = 0; i < boardH; i++) { delete[]newBoard[i]; }
+	delete[]newBoard;
+	delete[]newHeight;
 
 	return thisQ;
 }
 
-char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
+char ** getNewBoard(char ** board, int boardW, int boardH, char curPiece, int x, int rotation)
+{
+
 	/* new board after this piece falls */
 	char** newBoard = new char*[boardH];
 	for (int i = 0; i < boardH; i++) {
@@ -76,7 +88,7 @@ char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
 		for (int j = 0; j < boardW; j++)
 			newBoard[i][j] = board[i][j];
 	}
-	int* height = getHeight(board);
+	int* height = getHeight(board,boardW,boardH);
 	try {
 		/* set 1 at newBoard, new position */
 		/* if access overflows return nullptr */
@@ -283,19 +295,21 @@ char ** Board::getNewBoard(char** board, char curPiece, int x, int rotation) {
 	}
 	catch (bool) {
 		for (int i = 0; i < boardH; i++)
-			SAFE_DELETE(newBoard[i]);
-		SAFE_DELETE(newBoard);
+			delete[]newBoard[i];
+		delete[]newBoard;
 		newBoard = nullptr;
 	}
+	delete[]height;
 
 	return newBoard;
 }
 
-void Board::select(char curPiece, int*bestX, int* bestRotation, char nextPiece) {
+void select(char**board, int boardW, int boardH, char curPiece, int * bestX, int * bestRotation, char nextPiece)
+{
 	double bestQ = -1000000.0;
 	for (int i = 0; i < boardW; i++) {	/* for every Xs */
 		for (int j = 1; j < 5; j++) {	/* for every rotations */
-			double Q = evaluate(board, curPiece, i, j, nextPiece);	/* find Max Q */
+			double Q = evaluate(board,boardW,boardH, curPiece, i, j, nextPiece);	/* find Max Q */
 			if (Q > bestQ) {
 				bestQ = Q;
 				*bestX = i + 1;
@@ -303,21 +317,4 @@ void Board::select(char curPiece, int*bestX, int* bestRotation, char nextPiece) 
 			}
 		}
 	}
-}
-
-Board::Board(const char board[], const int boardW, const int boardH)
-	:boardW(boardW), boardH(boardH) {
-	/* convert 1d board to 2d board */
-	this->board = new char*[boardH];
-	for (int y = 0; y < boardH; y++) {
-		this->board[y] = new char[boardW];
-		for (int x = 0; x < boardW; x++)
-			this->board[y][x] = board[y*boardW + x];
-	}
-
-}
-Board::~Board() {
-	for (int i = 0; i < boardW; i++)
-		SAFE_DELETE(board[i]);
-	SAFE_DELETE(board);
 }
