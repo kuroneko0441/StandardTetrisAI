@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include "functions.h"
+#include <stdlib.h>
 #define DECLSPEC_EXPORT __declspec(dllexport)
 #define WINAPI __stdcall
 
@@ -256,8 +257,8 @@ int AI(int boardW, int boardH,
 	select(board2D, boardW, boardH, curPiece, bestX, bestRotation, nextPiece);
 
 	for (int i = 0; i < boardH; i++)
-		delete[]board2D[i];
-	delete[]board2D;
+		free(board2D[i]);
+	free(board2D);
 
 	return 0;
 }
